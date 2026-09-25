@@ -5,7 +5,8 @@ from frappe.utils import add_days, getdate, nowdate
 
 @frappe.whitelist()
 def get_dashboard_stats():
-	frappe.has_permission("Library Transaction", throw=True)
+	# library-wide numbers are for staff only
+	frappe.has_permission("Library Transaction", "create", throw=True)
 	open_loans = {"status": ["in", ["Issued", "Overdue"]]}
 	return {
 		"articles": frappe.db.count("Library Article"),
@@ -34,6 +35,25 @@ def get_dashboard_stats():
 			order_by="count desc",
 		),
 	}
+
+
+@frappe.whitelist()
+def get_my_loans():
+	"""Membership and loans of the logged-in user (member ID is the user ID)."""
+	user = frappe.session.user
+	member = frappe.db.get_value(
+		"Library Member", user, ["name", "full_name", "membership_type", "status", "joined_on"], as_dict=True
+	)
+	if not member:
+		return {"member": None, "loans": []}
+	loans = frappe.get_all(
+		"Library Transaction",
+		filters={"member": user},
+		fields=["name", "article", "article_title", "issue_date", "due_date", "return_date", "status", "fine_amount"],
+		order_by="issue_date desc",
+		limit=100,
+	)
+	return {"member": member, "loans": loans}
 
 
 @frappe.whitelist()
@@ -97,24 +117,22 @@ def mark_overdue():
 def after_install():
 	if not frappe.db.exists("Role", "Librarian"):
 		frappe.get_doc({"doctype": "Role", "role_name": "Librarian", "desk_access": 1}).insert(ignore_permissions=True)
+	add_lms_sidebar_link()
 
 
-@frappe.whitelist()
-def get_unlinked_users(txt: str | None = None):
-	"""Enabled users that are not yet library members, for the member picker."""
-	frappe.has_permission("Library Member", "create", throw=True)
-	User = frappe.qb.DocType("User")
-	Member = frappe.qb.DocType("Library Member")
-	query = (
-		frappe.qb.from_(User)
-		.left_join(Member)
-		.on(Member.user == User.name)
-		.select(User.name, User.full_name, User.email, User.user_type)
-		.where((User.enabled == 1) & (User.name.notin(["Administrator", "Guest"])) & Member.name.isnull())
-		.orderby(User.full_name)
-		.limit(50)
-	)
-	if txt:
-		like = f"%{txt}%"
-		query = query.where((User.full_name.like(like)) | (User.name.like(like)))
-	return query.run(as_dict=True)
+def add_lms_sidebar_link():
+	"""Put a Library link in the Frappe Learning (LMS) sidebar so students find /library."""
+	if "lms" not in frappe.get_installed_apps():
+		return
+	if not frappe.db.exists("Web Page", {"route": "library"}):
+		# unpublished: only gives the LMS link a target; /library itself is served by www/library.py
+		frappe.get_doc(
+			{"doctype": "Web Page", "title": "Library", "route": "library", "published": 0}
+		).insert(ignore_permissions=True)
+	web_page = frappe.db.get_value("Web Page", {"route": "library"})
+	settings = frappe.get_single("LMS Settings")
+	if any(item.web_page == web_page for item in settings.sidebar_items):
+		return
+	settings.append("sidebar_items", {"web_page": web_page, "title": "Library", "icon": "Library", "route": "library"})
+	settings.flags.ignore_mandatory = True
+	settings.save(ignore_permissions=True)

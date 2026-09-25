@@ -67,3 +67,6 @@ export const colorFor = (category) => categoryColors[category] || categoryColors
 export const tintFor = (category, alpha = "1A") => colorFor(category) + alpha
 
 export const formatFine = (amount) => Number(amount || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })
+
+// Librarians and System Managers manage the library; everyone else gets the student view.
+export const isStaff = window.is_staff !== false

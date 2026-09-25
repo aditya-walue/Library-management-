@@ -27,13 +27,19 @@
 
 <script setup>
 import { FrappeUIProvider } from "frappe-ui"
-import { ArrowLeftRight, BookOpen, LayoutDashboard, Users } from "lucide-vue-next"
+import { ArrowLeftRight, BookMarked, BookOpen, LayoutDashboard, Users } from "lucide-vue-next"
+import { isStaff } from "@/utils"
 import AppSidebar from "@/components/AppSidebar.vue"
 
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, to: "/" },
-  { label: "Catalogue", icon: BookOpen, to: "/catalogue" },
-  { label: "Members", icon: Users, to: "/members" },
-  { label: "Transactions", icon: ArrowLeftRight, to: "/transactions" },
-]
+const navItems = isStaff
+  ? [
+      { label: "Dashboard", icon: LayoutDashboard, to: "/" },
+      { label: "Catalogue", icon: BookOpen, to: "/catalogue" },
+      { label: "Members", icon: Users, to: "/members" },
+      { label: "Transactions", icon: ArrowLeftRight, to: "/transactions" },
+    ]
+  : [
+      { label: "My loans", icon: BookMarked, to: "/" },
+      { label: "Catalogue", icon: BookOpen, to: "/catalogue" },
+    ]
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div class="pb-14">
-    <PageHeader title="Catalogue" subtitle="Every title the library owns, with live availability.">
-      <Button variant="solid" size="md" class="btn-room" @click="openArticle(null)">
+    <PageHeader title="Catalogue" :subtitle="isStaff ? 'Every title the library owns, with live availability.' : 'Browse the library. Ask a librarian to borrow a title.'">
+      <Button v-if="isStaff" variant="solid" size="md" class="btn-room" @click="openArticle(null)">
         <template #prefix><Plus class="size-4" /></template>
         Add article
       </Button>
@@ -23,7 +23,7 @@
               <th class="th">Category</th>
               <th class="th hidden md:table-cell">ISBN</th>
               <th class="th w-44">Availability</th>
-              <th class="th w-36"><span class="sr-only">Actions</span></th>
+              <th v-if="isStaff" class="th w-36"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-paper-line">
@@ -58,7 +58,7 @@
                   </span>
                 </div>
               </td>
-              <td class="td">
+              <td v-if="isStaff" class="td">
                 <div class="flex justify-end gap-1.5">
                   <Button size="sm" variant="ghost" @click="openArticle(a)">Edit</Button>
                   <Button size="sm" :disabled="!a.available_copies" @click="issue(a)">Issue</Button>
@@ -72,7 +72,7 @@
         v-if="results.data && !results.data.length"
         :icon="BookOpen"
         :title="filtered ? 'No matching titles' : 'The catalogue is empty'"
-        :text="filtered ? 'Try a shorter search or another category.' : 'Add the first title to start lending.'"
+        :text="filtered ? 'Try a shorter search or another category.' : isStaff ? 'Add the first title to start lending.' : 'Check back soon for new titles.'"
       >
         <Button v-if="filtered" size="sm" @click="clearFilters">Clear search</Button>
       </EmptyState>
@@ -82,8 +82,8 @@
       <Button :loading="results.loading" @click="loadMore">Show more</Button>
     </div>
 
-    <ArticleDialog v-model="showArticle" :doc="editing" @saved="search" />
-    <IssueDialog v-model="showIssue" :article="issuing" @issued="search" />
+    <ArticleDialog v-if="isStaff" v-model="showArticle" :doc="editing" @saved="search" />
+    <IssueDialog v-if="isStaff" v-model="showIssue" :article="issuing" @issued="search" />
   </div>
 </template>
 
@@ -96,7 +96,7 @@ import PageHeader from "@/components/PageHeader.vue"
 import EmptyState from "@/components/EmptyState.vue"
 import ArticleDialog from "@/components/ArticleDialog.vue"
 import IssueDialog from "@/components/IssueDialog.vue"
-import { categories, colorFor, tintFor } from "@/utils"
+import { categories, colorFor, isStaff, tintFor } from "@/utils"
 import CategoryPill from "@/components/CategoryPill.vue"
 
 const PAGE = 50

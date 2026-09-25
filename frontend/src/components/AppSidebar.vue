@@ -28,7 +28,7 @@
     </nav>
 
     <div class="mt-auto border-t border-paper-line p-3">
-      <a href="/app/library" class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-ink-muted hover:bg-paper hover:text-ink">
+      <a v-if="isStaff" href="/app/library" class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-ink-muted hover:bg-paper hover:text-ink">
         <Monitor class="size-4" :stroke-width="1.75" />
         Open in Desk
       </a>
@@ -48,11 +48,12 @@ import { useRoute } from "vue-router"
 import { BookOpen, LogOut, Monitor } from "lucide-vue-next"
 import { call, createResource } from "frappe-ui"
 import Avatar from "@/components/Avatar.vue"
+import { isStaff } from "@/utils"
 
 const overdue = createResource({
   url: "frappe.client.get_count",
   params: { doctype: "Library Transaction", filters: { status: "Overdue" } },
-  auto: true,
+  auto: isStaff,
   cache: "overdue-count",
 })
 

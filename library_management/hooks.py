@@ -269,3 +269,18 @@ after_migrate = "library_management.api.after_install"
 scheduler_events = {
 	"daily": ["library_management.api.mark_overdue"],
 }
+
+# Students see the catalogue and only their own membership and loans
+permission_query_conditions = {
+	"Library Member": "library_management.permissions.member_query_conditions",
+	"Library Transaction": "library_management.permissions.transaction_query_conditions",
+}
+
+has_permission = {
+	"Library Member": "library_management.permissions.has_member_permission",
+	"Library Transaction": "library_management.permissions.has_transaction_permission",
+}
+
+standard_portal_menu_items = [
+	{"title": "Library", "route": "/library", "reference_doctype": "Library Transaction", "role": "LMS Student"},
+]
