@@ -50,6 +50,9 @@
               >
                 {{ relativeDue(loan.due_date) }}
               </span>
+              <span v-if="loan.fine_amount" class="tnum shrink-0 text-sm font-medium text-[#C23A50]" title="Fine so far">
+                Fine {{ formatFine(loan.fine_amount) }}
+              </span>
               <Button size="sm" :loading="returning === loan.name" @click="returnLoan(loan)">Return</Button>
             </li>
           </ul>
@@ -138,7 +141,7 @@ import PageHeader from "@/components/PageHeader.vue"
 import Avatar from "@/components/Avatar.vue"
 import EmptyState from "@/components/EmptyState.vue"
 import IssueDialog from "@/components/IssueDialog.vue"
-import { colorFor, errorMessage, greeting, relativeDue, tintFor } from "@/utils"
+import { colorFor, errorMessage, formatFine, greeting, relativeDue, tintFor } from "@/utils"
 
 const today = dayjs().format("dddd, D MMMM")
 const firstName = (window.full_name || "").split(" ")[0]
@@ -199,7 +202,7 @@ async function returnLoan(loan) {
   returning.value = loan.name
   try {
     const doc = await call("library_management.api.return_article", { transaction: loan.name })
-    toast.success(doc.fine_amount ? `Returned. Fine due: ${doc.fine_amount}` : "Returned")
+    toast.success(doc.fine_amount ? `Returned. Fine due: ${formatFine(doc.fine_amount)}` : "Returned")
     stats.reload()
   } catch (err) {
     toast.error(errorMessage(err))

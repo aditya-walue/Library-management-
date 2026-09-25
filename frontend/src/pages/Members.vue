@@ -85,6 +85,9 @@
                 <p class="text-xs text-ink-muted">
                   Issued {{ formatDate(loan.issue_date) }} ·
                   {{ loan.status === "Returned" ? `returned ${formatDate(loan.return_date)}` : relativeDue(loan.due_date) }}
+                  <span v-if="loan.fine_amount" class="font-medium text-[#C23A50]">
+                    · Fine {{ formatFine(loan.fine_amount) }}{{ loan.status === "Overdue" ? " so far" : "" }}
+                  </span>
                 </p>
               </div>
               <StatusBadge :status="loan.status" />
@@ -127,7 +130,7 @@ import Avatar from "@/components/Avatar.vue"
 import EmptyState from "@/components/EmptyState.vue"
 import MemberDialog from "@/components/MemberDialog.vue"
 import IssueDialog from "@/components/IssueDialog.vue"
-import { errorMessage, formatDate, relativeDue } from "@/utils"
+import { errorMessage, formatDate, formatFine, relativeDue } from "@/utils"
 
 const query = ref("")
 const status = ref("Active")
@@ -167,7 +170,7 @@ const loans = createResource({
   makeParams: ({ member }) => ({
     doctype: "Library Transaction",
     filters: { member },
-    fields: ["name", "article_title", "issue_date", "due_date", "return_date", "status"],
+    fields: ["name", "article_title", "issue_date", "due_date", "return_date", "status", "fine_amount"],
     order_by: "issue_date desc",
     limit_page_length: 100,
   }),
@@ -191,7 +194,7 @@ async function returnLoan(loan) {
   returning.value = loan.name
   try {
     const doc = await call("library_management.api.return_article", { transaction: loan.name })
-    toast.success(doc.fine_amount ? `Returned. Fine due: ${doc.fine_amount}` : "Returned")
+    toast.success(doc.fine_amount ? `Returned. Fine due: ${formatFine(doc.fine_amount)}` : "Returned")
     loadLoans()
   } catch (err) {
     toast.error(errorMessage(err))

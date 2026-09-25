@@ -65,3 +65,5 @@ export const categoryColors = {
 
 export const colorFor = (category) => categoryColors[category] || categoryColors.Other
 export const tintFor = (category, alpha = "1A") => colorFor(category) + alpha
+
+export const formatFine = (amount) => Number(amount || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })

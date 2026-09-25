@@ -45,7 +45,8 @@
               </td>
               <td class="td"><StatusBadge :status="row.status" /></td>
               <td class="td tnum text-right" :class="row.fine_amount ? 'font-medium text-brick' : 'text-ink-faint'">
-                {{ row.fine_amount || "—" }}
+                {{ row.fine_amount ? formatFine(row.fine_amount) : "—" }}
+                <p v-if="row.status === 'Overdue' && row.fine_amount" class="text-[11px] font-normal text-ink-faint">so far</p>
               </td>
               <td class="td text-right">
                 <Button
@@ -85,7 +86,7 @@ import StatusBadge from "@/components/StatusBadge.vue"
 import Avatar from "@/components/Avatar.vue"
 import EmptyState from "@/components/EmptyState.vue"
 import IssueDialog from "@/components/IssueDialog.vue"
-import { errorMessage, formatDate, relativeDue } from "@/utils"
+import { errorMessage, formatDate, formatFine, relativeDue } from "@/utils"
 
 const tabs = [
   { label: "On loan", value: "open" },
@@ -152,7 +153,7 @@ async function returnLoan(row) {
   returning.value = row.name
   try {
     const doc = await call("library_management.api.return_article", { transaction: row.name })
-    toast.success(doc.fine_amount ? `Returned. Fine due: ${doc.fine_amount}` : `${row.article_title} returned`)
+    toast.success(doc.fine_amount ? `Returned. Fine due: ${formatFine(doc.fine_amount)}` : `${row.article_title} returned`)
     transactions.reload()
   } catch (err) {
     toast.error(errorMessage(err))

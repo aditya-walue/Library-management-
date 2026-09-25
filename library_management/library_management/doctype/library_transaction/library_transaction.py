@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, date_diff, getdate, nowdate
+from frappe.utils import add_days, date_diff, flt, getdate, nowdate
 
 from library_management.library_management.doctype.library_settings.library_settings import get_settings
 
@@ -16,6 +16,8 @@ class LibraryTransaction(Document):
 		if self.is_new():
 			self.validate_member(settings)
 			self.validate_availability()
+		if self.status != "Returned":
+			self.update_overdue()
 
 	def validate_member(self, settings):
 		if frappe.db.get_value("Library Member", self.member, "status") != "Active":
@@ -49,7 +51,15 @@ class LibraryTransaction(Document):
 		if self.status == "Returned":
 			frappe.throw(_("Article already returned"))
 		self.return_date = getdate(return_date or nowdate())
-		late_days = max(date_diff(self.return_date, self.due_date), 0)
-		self.fine_amount = late_days * (get_settings().fine_per_day or 0)
+		self.fine_amount = self.calculate_fine(self.return_date)
 		self.status = "Returned"
 		self.save()
+
+	def calculate_fine(self, as_of=None) -> float:
+		late_days = max(date_diff(as_of or nowdate(), self.due_date), 0)
+		return late_days * flt(get_settings().fine_per_day)
+
+	def update_overdue(self):
+		"""Open loans past their due date are Overdue and accrue a fine until returned."""
+		self.fine_amount = self.calculate_fine()
+		self.status = "Overdue" if getdate(self.due_date) < getdate(nowdate()) else "Issued"

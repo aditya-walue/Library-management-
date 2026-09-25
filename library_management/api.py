@@ -17,7 +17,7 @@ def get_dashboard_stats():
 		"due_soon": frappe.get_all(
 			"Library Transaction",
 			filters={**open_loans, "due_date": ["<=", add_days(nowdate(), 3)]},
-			fields=["name", "member", "member_name", "article", "article_title", "due_date", "status"],
+			fields=["name", "member", "member_name", "article", "article_title", "due_date", "status", "fine_amount"],
 			order_by="due_date asc",
 			limit=8,
 		),
@@ -83,11 +83,15 @@ def return_article(transaction: str, return_date: str | None = None):
 
 
 def mark_overdue():
-	"""Daily: flag open loans past their due date."""
+	"""Daily: flag open loans past their due date and update the fine accrued so far."""
 	for name in frappe.get_all(
-		"Library Transaction", filters={"status": "Issued", "due_date": ["<", getdate(nowdate())]}, pluck="name"
+		"Library Transaction",
+		filters={"status": ["in", ["Issued", "Overdue"]], "due_date": ["<", getdate(nowdate())]},
+		pluck="name",
 	):
-		frappe.db.set_value("Library Transaction", name, "status", "Overdue")
+		doc = frappe.get_doc("Library Transaction", name)
+		doc.update_overdue()
+		doc.db_set({"status": doc.status, "fine_amount": doc.fine_amount}, update_modified=False)
 
 
 def after_install():
