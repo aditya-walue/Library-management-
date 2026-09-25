@@ -39,7 +39,7 @@
   {
    "fieldname": "isbn",
    "fieldtype": "Data",
-   "label": "ISBN",
+   "label": "ISBN / Barcode",
    "unique": 1
   },
   {
@@ -115,7 +115,7 @@
  "image_field": "cover_image",
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-09-25 13:40:00.000000",
+ "modified": "2026-09-25 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "Library management",
  "name": "Library Article",

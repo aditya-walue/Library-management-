@@ -20,7 +20,7 @@
         </div>
 
         <p class="text-center text-sm text-ink-muted">
-          Point the camera at the book's ISBN barcode or its library QR label.
+          Point the camera at the barcode on the book or its library QR label.
         </p>
 
         <ErrorMessage :message="error" />
@@ -28,7 +28,7 @@
         <div class="flex items-center gap-2">
           <TextInput
             v-model="manual"
-            placeholder="Or type an ISBN or article code"
+            placeholder="Or type the barcode, ISBN or article code"
             class="flex-1"
             @keydown.enter="lookup(manual)"
           />
@@ -124,7 +124,7 @@ async function lookup(code) {
   try {
     const article = await call("library_management.api.resolve_article_code", { code })
     if (!article) {
-      error.value = `No article matches "${code}". Check the ISBN is saved on the article.`
+      error.value = `No article matches "${code}". Save this code in the article's "ISBN / Barcode" field.`
       return
     }
     emit("found", article)

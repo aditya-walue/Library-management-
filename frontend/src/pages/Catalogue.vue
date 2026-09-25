@@ -9,7 +9,7 @@
 
     <div class="panel overflow-hidden">
       <div class="flex flex-wrap items-center gap-3 border-b border-paper-line px-5 py-3">
-        <TextInput v-model="query" placeholder="Search title, author or ISBN" class="w-full sm:w-80">
+        <TextInput v-model="query" placeholder="Search title, author or barcode" class="w-full sm:w-80">
           <template #prefix><Search class="size-4 text-ink-faint" /></template>
         </TextInput>
         <ScanButton label="Scan" size="md" @found="showScanned" />
@@ -26,7 +26,7 @@
             <tr>
               <th class="th">Title</th>
               <th class="th">Category</th>
-              <th class="th hidden md:table-cell">ISBN</th>
+              <th class="th hidden md:table-cell">ISBN / Barcode</th>
               <th class="th w-44">Availability</th>
               <th v-if="isStaff" class="th w-36"><span class="sr-only">Actions</span></th>
             </tr>

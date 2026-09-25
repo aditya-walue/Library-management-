@@ -4,7 +4,7 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormControl v-model="form.title" label="Title" class="sm:col-span-2" required />
         <FormControl v-model="form.author" label="Author" required />
-        <FormControl v-model="form.isbn" label="ISBN" />
+        <FormControl v-model="form.isbn" label="ISBN / Barcode" />
         <FormControl v-model="form.category" type="select" :options="categories" label="Category" />
         <FormControl v-model="form.publisher" label="Publisher" />
         <FormControl v-model="form.published_year" type="number" label="Published year" />

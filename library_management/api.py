@@ -104,12 +104,13 @@ def resolve_article_code(code: str):
 
 	name = code if frappe.db.exists("Library Article", code) else None
 	if not name:
-		isbn = "".join(ch for ch in code if ch.isdigit() or ch in "Xx").upper()
-		if len(isbn) in (10, 13):
+		# ISBN-10/13 or any product barcode (UPC-A, EAN-8...); scanners may add a leading 0
+		digits = "".join(ch for ch in code if ch.isdigit() or ch in "Xx").upper().lstrip("0")
+		if len(digits) >= 6:
 			match = frappe.db.sql(
 				"""select name from `tabLibrary Article`
-				where replace(replace(upper(isbn), '-', ''), ' ', '') = %s limit 1""",
-				(isbn,),
+				where trim(leading '0' from replace(replace(upper(isbn), '-', ''), ' ', '')) = %s limit 1""",
+				(digits,),
 			)
 			name = match[0][0] if match else None
 	if not name:
