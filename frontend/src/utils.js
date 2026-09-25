@@ -74,3 +74,6 @@ export const isStaff = window.is_staff !== false
 // QR labels carry a link, so any phone camera can open the title too.
 export const articleQrValue = (name) =>
   `${window.location.origin}/library/catalogue?article=${encodeURIComponent(name)}`
+
+export const memberQrValue = (name) =>
+  `${window.location.origin}/library/members?member=${encodeURIComponent(name)}`

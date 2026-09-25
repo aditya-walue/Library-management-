@@ -4,7 +4,7 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormControl v-model="form.title" label="Title" class="sm:col-span-2" required />
         <FormControl v-model="form.author" label="Author" required />
-        <FormControl v-model="form.isbn" label="ISBN / Barcode" />
+        <CodeField v-model="form.isbn" label="ISBN / Barcode" placeholder="Scan or type the barcode" />
         <FormControl v-model="form.category" type="select" :options="categories" label="Category" />
         <FormControl v-model="form.publisher" label="Publisher" />
         <FormControl v-model="form.published_year" type="number" label="Published year" />
@@ -27,6 +27,7 @@ import { reactive, ref, watch } from "vue"
 import { ErrorMessage, call, toast } from "frappe-ui"
 import { categories, errorMessage } from "@/utils"
 import ArticleQR from "@/components/ArticleQR.vue"
+import CodeField from "@/components/CodeField.vue"
 
 const props = defineProps({ doc: Object })
 const show = defineModel({ type: Boolean })

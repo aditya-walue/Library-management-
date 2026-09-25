@@ -123,6 +123,44 @@ def resolve_article_code(code: str):
 	)
 
 
+def _normalize_code(value: str) -> str:
+	"""Card numbers compare case-insensitively, ignoring dashes, spaces and slashes (matches the SQL below)."""
+	return "".join(ch for ch in (value or "") if ch not in "- /").upper()
+
+
+@frappe.whitelist()
+def resolve_member_code(code: str):
+	"""Find the member for a scanned ID card (card number), library card QR, or user ID."""
+	frappe.has_permission("Library Member", "create", throw=True)  # staff only
+	code = (code or "").strip()
+	if not code:
+		return None
+
+	# library cards encode /library/members?member=<user id>
+	if "member=" in code:
+		from urllib.parse import parse_qs, urlparse
+
+		code = (parse_qs(urlparse(code).query).get("member") or [code])[0]
+
+	name = code if frappe.db.exists("Library Member", code) else None
+	normalized = _normalize_code(code)
+	if not name and normalized:
+		match = frappe.db.sql(
+			"""select name from `tabLibrary Member`
+			where upper(replace(replace(replace(card_id, '-', ''), ' ', ''), '/', '')) = %s limit 1""",
+			(normalized,),
+		)
+		name = match[0][0] if match else None
+	if not name:
+		return None
+	return frappe.db.get_value(
+		"Library Member",
+		name,
+		["name", "full_name", "user", "card_id", "status", "membership_type", "joined_on", "phone", "email"],
+		as_dict=True,
+	)
+
+
 @frappe.whitelist(methods=["POST"])
 def issue_article(member: str, article: str, issue_date: str | None = None, due_date: str | None = None):
 	doc = frappe.get_doc(

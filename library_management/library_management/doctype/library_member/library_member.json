@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "user",
+  "card_id",
   "first_name",
   "last_name",
   "full_name",
@@ -28,6 +29,14 @@
    "options": "User",
    "reqd": 1,
    "set_only_once": 1,
+   "unique": 1
+  },
+  {
+   "description": "Number encoded in the member's ID card barcode or QR code",
+   "fieldname": "card_id",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "ID Card No.",
    "unique": 1
   },
   {
@@ -106,7 +115,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-09-25 13:40:00.000000",
+ "modified": "2026-09-25 14:45:00.000000",
  "modified_by": "Administrator",
  "module": "Library management",
  "name": "Library Member",
@@ -151,7 +160,7 @@
   }
  ],
  "row_format": "Dynamic",
- "search_fields": "full_name,email",
+ "search_fields": "full_name,email,card_id",
  "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",

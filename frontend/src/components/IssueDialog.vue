@@ -3,7 +3,10 @@
     <template #body-content>
       <div class="space-y-4">
         <div>
-          <label class="mb-1.5 block text-xs text-ink-gray-5">Member</label>
+          <div class="mb-1.5 flex items-center justify-between">
+            <label class="block text-xs text-ink-gray-5">Member</label>
+            <ScanButton kind="member" label="Scan ID card" @found="onMemberScanned" />
+          </div>
           <Combobox
             v-model="form.member"
             :options="memberOptions"
@@ -107,6 +110,16 @@ const issue = createResource({
     error.value = errorMessage(err)
   },
 })
+
+function onMemberScanned(member) {
+  if (member.status !== "Active") {
+    error.value = `${member.full_name}'s membership is inactive.`
+    return
+  }
+  error.value = ""
+  if (!memberOptions.value.some((o) => o.value === member.name)) members.reload()
+  form.member = member.name
+}
 
 function onScanned(article) {
   if (!article.available_copies) {

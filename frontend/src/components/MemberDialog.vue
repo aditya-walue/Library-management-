@@ -19,6 +19,7 @@
         </div>
         <FormControl :model-value="selectedUser?.full_name" label="Full name" disabled />
         <FormControl :model-value="selectedUser?.email" label="Email" disabled />
+        <CodeField v-model="form.card_id" label="ID card number" placeholder="Scan or type the ID card number" />
         <FormControl v-model="form.phone" label="Phone" />
         <FormControl
           v-model="form.membership_type"
@@ -42,12 +43,13 @@
 import { computed, reactive, ref, watch } from "vue"
 import { Combobox, ErrorMessage, call, createResource, debounce, toast } from "frappe-ui"
 import { errorMessage } from "@/utils"
+import CodeField from "@/components/CodeField.vue"
 
 const props = defineProps({ doc: Object })
 const show = defineModel({ type: Boolean })
 const emit = defineEmits(["saved"])
 
-const fields = ["user", "phone", "membership_type", "status"]
+const fields = ["user", "card_id", "phone", "membership_type", "status"]
 const blank = { membership_type: "Public", status: "Active" }
 const form = reactive({})
 const error = ref("")
@@ -86,9 +88,9 @@ async function save() {
       ? await call("frappe.client.set_value", {
           doctype: "Library Member",
           name: props.doc.name,
-          fieldname: { phone: form.phone, membership_type: form.membership_type, status: form.status },
+          fieldname: { card_id: form.card_id || null, phone: form.phone, membership_type: form.membership_type, status: form.status },
         })
-      : await call("frappe.client.insert", { doc: { doctype: "Library Member", ...form } })
+      : await call("frappe.client.insert", { doc: { doctype: "Library Member", ...form, card_id: form.card_id || null } })
     toast.success(props.doc ? "Member updated" : `${doc.full_name} added`)
     show.value = false
     emit("saved", doc)

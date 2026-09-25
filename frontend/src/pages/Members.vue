@@ -12,6 +12,7 @@
         <TextInput v-model="query" placeholder="Search by name" class="w-full sm:w-72">
           <template #prefix><Search class="size-4 text-ink-faint" /></template>
         </TextInput>
+        <ScanButton kind="member" label="Scan ID card" size="md" @found="openMember" />
         <TabButtons v-model="status" :buttons="[{ label: 'Active' }, { label: 'Inactive' }, { label: 'All', value: '' }]" />
       </div>
       <div class="overflow-x-auto">
@@ -20,6 +21,7 @@
             <tr>
               <th class="th">Member</th>
               <th class="th">Membership</th>
+              <th class="th hidden md:table-cell">ID card</th>
               <th class="th hidden lg:table-cell">Phone</th>
               <th class="th hidden md:table-cell">Joined</th>
               <th class="th text-right">Status</th>
@@ -44,6 +46,7 @@
                 </div>
               </td>
               <td class="td text-ink-muted">{{ m.membership_type }}</td>
+              <td class="td hidden text-ink-muted md:table-cell">{{ m.card_id || "—" }}</td>
               <td class="td hidden text-ink-muted lg:table-cell">{{ m.phone || "—" }}</td>
               <td class="td hidden text-ink-muted md:table-cell">{{ formatDate(m.joined_on) }}</td>
               <td class="td text-right"><StatusBadge :status="m.status" /></td>
@@ -69,13 +72,17 @@
             <Avatar :name="selected.full_name" :seed="selected.name" size="lg" />
             <div class="min-w-0 flex-1">
               <h2 class="font-display text-2xl font-medium text-ink">{{ selected.full_name }}</h2>
-              <p class="text-sm text-ink-muted">{{ selected.user }}</p>
+              <p class="text-sm text-ink-muted">
+                {{ selected.user }}<template v-if="selected.card_id"> · ID card {{ selected.card_id }}</template>
+              </p>
               <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
                 <StatusBadge :status="selected.status" />
                 <span>{{ selected.membership_type }} member since {{ formatDate(selected.joined_on) }}</span>
               </div>
             </div>
           </div>
+
+          <LibraryCard :member="selected" class="mt-5" />
 
           <h3 class="mb-2 mt-6 text-sm font-medium text-ink">Loans</h3>
           <ul v-if="loans.data?.length" class="divide-y divide-paper-line rounded-xl border border-paper-line">
@@ -122,16 +129,21 @@
 
 <script setup>
 import { ref, watch } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import { TabButtons, TextInput, call, createListResource, createResource, debounce, toast } from "frappe-ui"
 import { Plus, Search, Users } from "lucide-vue-next"
 import PageHeader from "@/components/PageHeader.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
 import Avatar from "@/components/Avatar.vue"
 import EmptyState from "@/components/EmptyState.vue"
+import ScanButton from "@/components/ScanButton.vue"
+import LibraryCard from "@/components/LibraryCard.vue"
 import MemberDialog from "@/components/MemberDialog.vue"
 import IssueDialog from "@/components/IssueDialog.vue"
 import { errorMessage, formatDate, formatFine, relativeDue } from "@/utils"
 
+const route = useRoute()
+const router = useRouter()
 const query = ref("")
 const status = ref("Active")
 
@@ -144,7 +156,7 @@ const filters = () => {
 
 const members = createListResource({
   doctype: "Library Member",
-  fields: ["name", "user", "full_name", "email", "phone", "membership_type", "status", "joined_on"],
+  fields: ["name", "user", "card_id", "full_name", "email", "phone", "membership_type", "status", "joined_on"],
   orderBy: "full_name asc",
   pageLength: 50,
   filters: filters(),
@@ -183,6 +195,16 @@ function openMember(row) {
   loadLoans()
   showDetail.value = true
 }
+
+// library card QR links open straight into the member's profile
+async function openFromLink(code) {
+  if (!code) return
+  const member = await call("library_management.api.resolve_member_code", { code }).catch(() => null)
+  if (member) openMember(member)
+  else toast.error("That library card doesn't match any member.")
+  router.replace({ query: {} })
+}
+watch(() => route.query.member, openFromLink, { immediate: true })
 
 function editMember(member) {
   editing.value = member

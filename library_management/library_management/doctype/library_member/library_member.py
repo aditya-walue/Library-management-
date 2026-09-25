@@ -16,3 +16,4 @@ class LibraryMember(Document):
 		self.last_name = user.last_name
 		self.email = user.email
 		self.full_name = " ".join(filter(None, [self.first_name, self.last_name]))
+		self.card_id = (self.card_id or "").strip() or None

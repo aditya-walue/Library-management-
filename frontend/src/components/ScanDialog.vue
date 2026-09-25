@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model="show" :options="{ title: 'Scan article', size: 'md' }">
+  <Dialog v-model="show" :options="{ title: config.title, size: 'md' }">
     <template #body-content>
       <div class="space-y-4">
         <div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-ink">
@@ -19,16 +19,14 @@
           </div>
         </div>
 
-        <p class="text-center text-sm text-ink-muted">
-          Point the camera at the barcode on the book or its library QR label.
-        </p>
+        <p class="text-center text-sm text-ink-muted">{{ config.hint }}</p>
 
         <ErrorMessage :message="error" />
 
         <div class="flex items-center gap-2">
           <TextInput
             v-model="manual"
-            placeholder="Or type the barcode, ISBN or article code"
+            :placeholder="config.placeholder"
             class="flex-1"
             @keydown.enter="lookup(manual)"
           />
@@ -45,14 +43,39 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, ref, watch } from "vue"
+import { computed, onBeforeUnmount, ref, watch } from "vue"
 import { ErrorMessage, TextInput, call } from "frappe-ui"
 import { BrowserMultiFormatReader } from "@zxing/browser"
 import { BarcodeFormat, DecodeHintType } from "@zxing/library"
 import { CameraOff, ImageUp } from "lucide-vue-next"
 import { errorMessage } from "@/utils"
 
+const props = defineProps({ kind: { type: String, default: "article" } })
 const show = defineModel({ type: Boolean })
+
+const kinds = {
+  article: {
+    title: "Scan article",
+    hint: "Point the camera at the barcode on the book or its library QR label.",
+    placeholder: "Or type the barcode, ISBN or article code",
+    url: "library_management.api.resolve_article_code",
+    notFound: (code) => `No article matches "${code}". Save this code in the article's "ISBN / Barcode" field.`,
+  },
+  member: {
+    title: "Scan ID card",
+    hint: "Point the camera at the barcode or QR code on the member's ID card or library card.",
+    placeholder: "Or type the ID card number",
+    url: "library_management.api.resolve_member_code",
+    notFound: (code) => `No member has ID card "${code}". Save it in the member's "ID Card No." field.`,
+  },
+  code: {
+    title: "Scan code",
+    hint: "Point the camera at the barcode or QR code.",
+    placeholder: "Or type the code",
+    url: null,
+  },
+}
+const config = computed(() => kinds[props.kind] || kinds.article)
 const emit = defineEmits(["found"])
 
 const video = ref(null)
@@ -66,7 +89,20 @@ const lastCode = ref("")
 const hints = new Map([
   [
     DecodeHintType.POSSIBLE_FORMATS,
-    [BarcodeFormat.QR_CODE, BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.CODE_128],
+    [
+      BarcodeFormat.QR_CODE,
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E,
+      BarcodeFormat.CODE_128,
+      BarcodeFormat.CODE_39,
+      BarcodeFormat.CODE_93,
+      BarcodeFormat.ITF,
+      BarcodeFormat.PDF_417,
+      BarcodeFormat.DATA_MATRIX,
+      BarcodeFormat.AZTEC,
+    ],
   ],
 ])
 const reader = new BrowserMultiFormatReader(hints)
@@ -122,12 +158,17 @@ async function lookup(code) {
   resolving.value = true
   error.value = ""
   try {
-    const article = await call("library_management.api.resolve_article_code", { code })
-    if (!article) {
-      error.value = `No article matches "${code}". Save this code in the article's "ISBN / Barcode" field.`
+    if (!config.value.url) {
+      emit("found", code)
+      show.value = false
       return
     }
-    emit("found", article)
+    const match = await call(config.value.url, { code })
+    if (!match) {
+      error.value = config.value.notFound(code)
+      return
+    }
+    emit("found", match)
     show.value = false
   } catch (err) {
     error.value = errorMessage(err)
