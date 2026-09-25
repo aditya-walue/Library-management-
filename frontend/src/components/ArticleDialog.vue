@@ -10,6 +10,7 @@
         <FormControl v-model="form.published_year" type="number" label="Published year" />
         <FormControl v-model="form.total_copies" type="number" label="Total copies" />
         <FormControl v-model="form.description" type="textarea" label="Description" class="sm:col-span-2" />
+        <ArticleQR v-if="doc" :article="doc" class="sm:col-span-2" />
         <ErrorMessage :message="error" class="sm:col-span-2" />
       </div>
     </template>
@@ -25,6 +26,7 @@
 import { reactive, ref, watch } from "vue"
 import { ErrorMessage, call, toast } from "frappe-ui"
 import { categories, errorMessage } from "@/utils"
+import ArticleQR from "@/components/ArticleQR.vue"
 
 const props = defineProps({ doc: Object })
 const show = defineModel({ type: Boolean })
@@ -40,6 +42,7 @@ watch(show, (open) => {
   if (!open) return
   error.value = ""
   for (const key of fields) form[key] = props.doc?.[key] ?? blank[key] ?? ""
+  if (!form.published_year) form.published_year = ""
 })
 
 async function save() {

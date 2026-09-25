@@ -12,7 +12,10 @@
           />
         </div>
         <div>
-          <label class="mb-1.5 block text-xs text-ink-gray-5">Article</label>
+          <div class="mb-1.5 flex items-center justify-between">
+            <label class="block text-xs text-ink-gray-5">Article</label>
+            <ScanButton label="Scan" @found="onScanned" />
+          </div>
           <Combobox
             v-model="form.article"
             :options="articleOptions"
@@ -50,6 +53,7 @@
 import { computed, reactive, ref, watch } from "vue"
 import { Combobox, ErrorMessage, createListResource, createResource, dayjs, toast } from "frappe-ui"
 import { errorMessage } from "@/utils"
+import ScanButton from "@/components/ScanButton.vue"
 
 const props = defineProps({ member: String, article: String })
 const show = defineModel({ type: Boolean })
@@ -103,6 +107,16 @@ const issue = createResource({
     error.value = errorMessage(err)
   },
 })
+
+function onScanned(article) {
+  if (!article.available_copies) {
+    error.value = `All copies of "${article.title}" are on loan.`
+    return
+  }
+  error.value = ""
+  if (!articleOptions.value.some((o) => o.value === article.name)) articles.reload()
+  form.article = article.name
+}
 
 function submit() {
   error.value = ""

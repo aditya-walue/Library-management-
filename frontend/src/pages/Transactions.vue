@@ -13,6 +13,7 @@
         <TextInput v-model="query" placeholder="Search member or title" class="w-full sm:w-72">
           <template #prefix><Search class="size-4 text-ink-faint" /></template>
         </TextInput>
+        <ScanButton label="Scan to find" size="md" @found="(a) => (query = a.title)" />
       </div>
       <div class="overflow-x-auto">
         <table class="w-full min-w-[760px] text-left text-sm">
@@ -85,6 +86,7 @@ import PageHeader from "@/components/PageHeader.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
 import Avatar from "@/components/Avatar.vue"
 import EmptyState from "@/components/EmptyState.vue"
+import ScanButton from "@/components/ScanButton.vue"
 import IssueDialog from "@/components/IssueDialog.vue"
 import { errorMessage, formatDate, formatFine, relativeDue } from "@/utils"
 

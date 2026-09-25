@@ -70,3 +70,7 @@ export const formatFine = (amount) => Number(amount || 0).toLocaleString(undefin
 
 // Librarians and System Managers manage the library; everyone else gets the student view.
 export const isStaff = window.is_staff !== false
+
+// QR labels carry a link, so any phone camera can open the title too.
+export const articleQrValue = (name) =>
+  `${window.location.origin}/library/catalogue?article=${encodeURIComponent(name)}`

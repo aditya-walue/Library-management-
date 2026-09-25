@@ -12,8 +12,13 @@
         <TextInput v-model="query" placeholder="Search title, author or ISBN" class="w-full sm:w-80">
           <template #prefix><Search class="size-4 text-ink-faint" /></template>
         </TextInput>
+        <ScanButton label="Scan" size="md" @found="showScanned" />
         <FormControl v-model="category" type="select" :options="categoryOptions" class="w-44" />
         <Switch v-model="availableOnly" label="Available only" />
+      </div>
+      <div v-if="scanned" class="flex items-center justify-between gap-3 border-b border-paper-line bg-[#2F6FE4]/5 px-5 py-2.5 text-sm">
+        <span class="text-ink">Showing the scanned article</span>
+        <button class="font-medium text-[#2F6FE4] hover:underline" @click="clearScanned">Show all titles</button>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full min-w-[680px] text-left text-sm">
@@ -89,11 +94,12 @@
 
 <script setup>
 import { computed, ref, watch } from "vue"
-import { useRoute } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import { Switch, TextInput, createResource, debounce } from "frappe-ui"
 import { BookOpen, Plus, Search } from "lucide-vue-next"
 import PageHeader from "@/components/PageHeader.vue"
 import EmptyState from "@/components/EmptyState.vue"
+import ScanButton from "@/components/ScanButton.vue"
 import ArticleDialog from "@/components/ArticleDialog.vue"
 import IssueDialog from "@/components/IssueDialog.vue"
 import { categories, colorFor, isStaff, tintFor } from "@/utils"
@@ -101,11 +107,13 @@ import CategoryPill from "@/components/CategoryPill.vue"
 
 const PAGE = 50
 const route = useRoute()
+const router = useRouter()
 const query = ref(route.query.q || "")
 const category = ref("all")
 const availableOnly = ref(false)
 const hasMore = ref(false)
-const filtered = computed(() => !!(query.value || category.value !== "all" || availableOnly.value))
+const scanned = ref(route.query.article || "")
+const filtered = computed(() => !!(query.value || category.value !== "all" || availableOnly.value || scanned.value))
 const categoryOptions = [{ label: "All categories", value: "all" }, ...categories.map((c) => ({ label: c, value: c }))]
 
 const showArticle = ref(false)
@@ -119,6 +127,7 @@ const results = createResource({
     query: query.value,
     category: category.value === "all" ? "" : category.value,
     available_only: availableOnly.value ? 1 : 0,
+    article: scanned.value || undefined,
     start,
     page_length: PAGE,
   }),
@@ -138,7 +147,24 @@ async function loadMore() {
   results.setData([...previous, ...results.data])
 }
 
+function showScanned(article) {
+  router.replace({ query: { article: article.name } })
+}
+
+function clearScanned() {
+  router.replace({ query: {} })
+}
+
+watch(
+  () => route.query.article,
+  (article) => {
+    scanned.value = article || ""
+    search()
+  },
+)
+
 function clearFilters() {
+  clearScanned()
   query.value = ""
   category.value = "all"
   availableOnly.value = false

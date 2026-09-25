@@ -10,6 +10,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppSidebar: typeof import('./src/components/AppSidebar.vue')['default']
     ArticleDialog: typeof import('./src/components/ArticleDialog.vue')['default']
+    ArticleQR: typeof import('./src/components/ArticleQR.vue')['default']
     Avatar: typeof import('./src/components/Avatar.vue')['default']
     CategoryPill: typeof import('./src/components/CategoryPill.vue')['default']
     EmptyState: typeof import('./src/components/EmptyState.vue')['default']
@@ -18,6 +19,8 @@ declare module 'vue' {
     PageHeader: typeof import('./src/components/PageHeader.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ScanButton: typeof import('./src/components/ScanButton.vue')['default']
+    ScanDialog: typeof import('./src/components/ScanDialog.vue')['default']
     StatusBadge: typeof import('./src/components/StatusBadge.vue')['default']
   }
 }

@@ -57,9 +57,18 @@ def get_my_loans():
 
 
 @frappe.whitelist()
-def search_catalogue(query: str | None = None, category: str | None = None, available_only: bool = False, start: int = 0, page_length: int = 24):
+def search_catalogue(
+	query: str | None = None,
+	category: str | None = None,
+	available_only: bool = False,
+	start: int = 0,
+	page_length: int = 24,
+	article: str | None = None,
+):
 	frappe.has_permission("Library Article", throw=True)
 	filters = {}
+	if article:
+		filters["name"] = article
 	if category:
 		filters["category"] = category
 	if frappe.utils.cint(available_only):
@@ -76,6 +85,40 @@ def search_catalogue(query: str | None = None, category: str | None = None, avai
 		order_by="title asc",
 		start=frappe.utils.cint(start),
 		page_length=frappe.utils.cint(page_length),
+	)
+
+
+@frappe.whitelist()
+def resolve_article_code(code: str):
+	"""Find the article for a scanned QR code (library link or article ID) or ISBN barcode."""
+	frappe.has_permission("Library Article", throw=True)
+	code = (code or "").strip()
+	if not code:
+		return None
+
+	# QR labels encode /library/catalogue?article=<name>
+	if "article=" in code:
+		from urllib.parse import parse_qs, urlparse
+
+		code = (parse_qs(urlparse(code).query).get("article") or [code])[0]
+
+	name = code if frappe.db.exists("Library Article", code) else None
+	if not name:
+		isbn = "".join(ch for ch in code if ch.isdigit() or ch in "Xx").upper()
+		if len(isbn) in (10, 13):
+			match = frappe.db.sql(
+				"""select name from `tabLibrary Article`
+				where replace(replace(upper(isbn), '-', ''), ' ', '') = %s limit 1""",
+				(isbn,),
+			)
+			name = match[0][0] if match else None
+	if not name:
+		return None
+	return frappe.db.get_value(
+		"Library Article",
+		name,
+		["name", "title", "author", "isbn", "category", "available_copies", "total_copies"],
+		as_dict=True,
 	)
 
 
