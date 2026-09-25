@@ -1,0 +1,42 @@
+@import "frappe-ui/style.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    font-family: "Hanken Grotesk", system-ui, sans-serif;
+    background: theme("colors.paper.DEFAULT");
+    color: theme("colors.ink.DEFAULT");
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid theme("colors.room.DEFAULT");
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-room {
+    @apply !bg-room !text-white hover:!bg-room-deep;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 2px rgba(23, 44, 35, 0.3);
+  }
+  .panel {
+    @apply rounded-2xl border border-paper-line bg-white;
+    box-shadow: 0 1px 2px rgba(26, 29, 27, 0.04), 0 4px 12px -6px rgba(26, 29, 27, 0.06);
+  }
+  .panel-head {
+    @apply flex items-center justify-between border-b border-paper-line px-5 py-4;
+  }
+  .th {
+    @apply bg-paper/60 px-3 py-2.5 text-xs font-medium text-ink-muted first:pl-5 last:pr-5;
+  }
+  .td {
+    @apply px-3 py-3.5 first:pl-5 last:pr-5;
+  }
+  .tnum {
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+}

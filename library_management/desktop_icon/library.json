@@ -1,0 +1,20 @@
+{
+ "app": "library_management",
+ "creation": "2026-09-25 12:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "library",
+ "icon_type": "Link",
+ "idx": 1,
+ "label": "Library",
+ "link_to": "Library",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-09-25 12:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "Library",
+ "owner": "Administrator",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}

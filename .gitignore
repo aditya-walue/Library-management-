@@ -53,3 +53,7 @@ jspm_packages/
 
 # Aider AI Chat
 .aider*
+
+# Frappe UI build output
+library_management/public/frontend/
+library_management/www/library.html

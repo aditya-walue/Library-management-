@@ -256,3 +256,16 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+
+# Frappe UI frontend
+# ------------------
+website_route_rules = [
+	{"from_route": "/library/<path:app_path>", "to_route": "library"},
+]
+
+after_install = "library_management.api.after_install"
+after_migrate = "library_management.api.after_install"
+
+scheduler_events = {
+	"daily": ["library_management.api.mark_overdue"],
+}
