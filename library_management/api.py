@@ -184,6 +184,27 @@ def return_article(transaction: str, return_date: str | None = None):
 	return doc.as_dict()
 
 
+@frappe.whitelist()
+def get_unlinked_users(txt: str | None = None):
+	"""Enabled users that are not yet library members, for the member picker."""
+	frappe.has_permission("Library Member", "create", throw=True)
+	User = frappe.qb.DocType("User")
+	Member = frappe.qb.DocType("Library Member")
+	query = (
+		frappe.qb.from_(User)
+		.left_join(Member)
+		.on(Member.user == User.name)
+		.select(User.name, User.full_name, User.email, User.user_type)
+		.where((User.enabled == 1) & (User.name.notin(["Administrator", "Guest"])) & Member.name.isnull())
+		.orderby(User.full_name)
+		.limit(50)
+	)
+	if txt:
+		like = f"%{txt}%"
+		query = query.where((User.full_name.like(like)) | (User.name.like(like)))
+	return query.run(as_dict=True)
+
+
 def mark_overdue():
 	"""Daily: flag open loans past their due date and update the fine accrued so far."""
 	for name in frappe.get_all(
